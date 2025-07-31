@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Pradaxa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .modal-backdrop {
+            transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease;
+        }
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.6);
+        }
+        .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 antialiased">
+
+    <div id="app-container" class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">Registro de Pradaxa</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">Pulsa el botón cada vez que tomes tu medicación.</p>
+        </header>
+
+        <!-- Sección de ID de Usuario -->
+        <div class="bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-yellow-500 text-yellow-700 dark:text-yellow-300 p-4 rounded-md mb-8" role="alert">
+            <p class="font-bold">Tu ID de Usuario Permanente</p>
+            <p class="text-sm">Este ID está en tu enlace. Usa siempre el mismo enlace para acceder a tus datos.</p>
+            <div class="mt-2 flex items-center gap-2 bg-yellow-200/50 dark:bg-gray-800 p-2 rounded-md">
+                <code id="userIdDisplay" class="flex-grow text-sm font-mono break-all">Cargando...</code>
+                <button id="copyIdBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded-md text-sm">Copiar ID</button>
+            </div>
+        </div>
+
+        <main>
+            <!-- Botón principal -->
+            <div class="text-center mb-8">
+                <button id="takePillBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-12 rounded-full shadow-lg transform hover:scale-105 transition-transform duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800">
+                    ¡He tomado la pastilla!
+                </button>
+            </div>
+
+            <!-- Estadísticas, Gráfico y Tabla (sin cambios) -->
+            <div id="statsSection" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 text-center hidden">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"><h3 class="text-lg font-semibold text-gray-500 dark:text-gray-400">Tiempo Medio</h3><p id="avgTime" class="text-2xl font-bold text-green-600 dark:text-green-400">-</p></div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"><h3 class="text-lg font-semibold text-gray-500 dark:text-gray-400">Varianza</h3><p id="variance" class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">-</p></div>
+            </div>
+            <div id="chartSection" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8 hidden"><h2 class="text-xl font-bold text-center mb-4">Horas entre Tomas</h2><canvas id="takesChart"></canvas></div>
+            <div id="logSection" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <h2 class="text-xl font-bold mb-4">Historial de Tomas</h2>
+                <div id="loadingMessage" class="text-center text-gray-500 py-4">Cargando datos...</div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 dark:bg-gray-700"><tr><th class="p-3 font-semibold">#</th><th class="p-3 font-semibold">Fecha</th><th class="p-3 font-semibold">Hora</th><th class="p-3 font-semibold text-right">Acción</th></tr></thead>
+                        <tbody id="logTableBody"></tbody>
+                    </table>
+                     <p id="noDataMessage" class="text-center py-8 text-gray-500 hidden">Aún no hay registros.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modales -->
+    <div id="setup-notice" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 text-center max-w-md modal-content">
+            <h2 class="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-4">¡Acción Requerida!</h2>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">Para que tus datos se guarden para siempre, debes guardar esta dirección.</p>
+            <p class="text-gray-700 dark:text-gray-300 mb-6">Por favor, <strong>añade esta página a tu pantalla de inicio</strong> o guarda el enlace en tus favoritos AHORA.</p>
+            <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded-md mb-6">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Tu enlace único es:</p>
+                <code id="permanent-url" class="text-sm font-mono break-all"></code>
+            </div>
+            <button id="understand-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg w-full">Entendido, he guardado el enlace</button>
+        </div>
+    </div>
+    <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 modal-backdrop hidden opacity-0">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm text-center modal-content transform scale-95">
+            <h3 class="text-xl font-bold mb-4">Confirmar Toma</h3><p class="text-gray-600 dark:text-gray-400 mb-4">Ajusta la hora si es necesario.</p>
+            <div class="mb-6"><input type="datetime-local" id="takeTimeInput" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"></div>
+            <div class="flex justify-center gap-4"><button id="cancelBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-lg">Cancelar</button><button id="confirmBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">Confirmar</button></div>
+        </div>
+    </div>
+    <div id="deleteConfirmationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 modal-backdrop hidden opacity-0">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm text-center modal-content transform scale-95">
+            <h3 class="text-xl font-bold mb-4 text-red-600">Eliminar Registro</h3><p class="text-gray-600 dark:text-gray-400 mb-6">¿Seguro que quieres eliminar este registro?</p>
+            <div class="flex justify-center gap-4"><button id="cancelDeleteBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-lg">Cancelar</button><button id="confirmDeleteBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">Eliminar</button></div>
+        </div>
+    </div>
+    <div id="copiedMessage" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-md shadow-lg opacity-0 transition-opacity duration-300">ID copiado al portapapeles</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNI_xL3YmNk6JQiHdymJeQk3FUX8H6tCk",
+            authDomain: "miregistropradaxa.firebaseapp.com",
+            projectId: "miregistropradaxa",
+            storageBucket: "miregistropradaxa.firebasestorage.app",
+            messagingSenderId: "786729810369",
+            appId: "1:786729810369:web:5fed05c41a601ea5725740",
+            measurementId: "G-KQET919J0D"
+        };
+
+        let db, userId, takesChart = null, unsubscribe = null, takeIdToDelete = null;
+
+        const el = (id) => document.getElementById(id);
+        const appContainer = el('app-container'), userIdDisplay = el('userIdDisplay'), copyIdBtn = el('copyIdBtn');
+        const takePillBtn = el('takePillBtn'), logTableBody = el('logTableBody'), avgTimeEl = el('avgTime');
+        const varianceEl = el('variance'), chartSection = el('chartSection'), statsSection = el('statsSection');
+        const loadingMessage = el('loadingMessage'), noDataMessage = el('noDataMessage');
+        const modal = el('confirmationModal'), confirmBtn = el('confirmBtn'), cancelBtn = el('cancelBtn');
+        const takeTimeInput = el('takeTimeInput'), deleteModal = el('deleteConfirmationModal');
+        const confirmDeleteBtn = el('confirmDeleteBtn'), cancelDeleteBtn = el('cancelDeleteBtn');
+        const setupNotice = el('setup-notice'), permanentUrlDisplay = el('permanent-url'), understandBtn = el('understand-btn');
+
+        function setupUserId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let currentId = urlParams.get('id');
+
+            if (!currentId) {
+                currentId = crypto.randomUUID();
+                const newUrl = `${window.location.origin}${window.location.pathname}?id=${currentId}`;
+                history.replaceState({ id: currentId }, '', newUrl);
+                
+                permanentUrlDisplay.textContent = newUrl;
+                setupNotice.classList.remove('hidden');
+            }
+            userId = currentId;
+            userIdDisplay.textContent = userId;
+        }
+
+        function loadDataForCurrentUser() {
+            if (unsubscribe) unsubscribe();
+            if (!db || !userId) return;
+
+            loadingMessage.style.display = 'block';
+            logTableBody.innerHTML = '';
+            noDataMessage.style.display = 'none';
+
+            const takesCollectionRef = collection(db, `takes/${userId}/log`);
+            const q = query(takesCollectionRef, orderBy('timestamp', 'desc'));
+
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                loadingMessage.style.display = 'none';
+                updateUI(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+            }, (error) => {
+                console.error("Error al obtener los datos:", error);
+                loadingMessage.textContent = "Error al cargar los datos.";
+            });
+        }
+
+        function copyUserId() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                const msg = el('copiedMessage');
+                msg.textContent = "¡Enlace copiado!";
+                msg.classList.remove('opacity-0');
+                setTimeout(() => msg.classList.add('opacity-0'), 2000);
+            }).catch(err => console.error('Error al copiar', err));
+        }
+
+        async function logPillTake() {
+            if (!takeTimeInput.value) return;
+            confirmBtn.disabled = true;
+            try {
+                const collectionRef = collection(db, `takes/${userId}/log`);
+                await addDoc(collectionRef, { timestamp: new Date(takeTimeInput.value) });
+            } catch (error) {
+                console.error("Error al guardar el registro: ", error);
+            } finally {
+                confirmBtn.disabled = false;
+                hideModal();
+            }
+        }
+        
+        async function executeDelete() {
+            if (!takeIdToDelete) return;
+            try {
+                await deleteDoc(doc(db, `takes/${userId}/log`, takeIdToDelete));
+            } catch (error) {
+                console.error("Error al eliminar el registro: ", error);
+            } finally {
+                hideDeleteModal();
+            }
+        }
+
+        function updateUI(takes) {
+            if (takes.length === 0) {
+                noDataMessage.style.display = 'block';
+                statsSection.classList.add('hidden');
+                chartSection.classList.add('hidden');
+                logTableBody.innerHTML = '';
+            } else {
+                noDataMessage.style.display = 'none';
+                renderTable(takes);
+                if (takes.length > 1) {
+                    statsSection.classList.remove('hidden');
+                    chartSection.classList.remove('hidden');
+                    const stats = calculateStats(takes);
+                    avgTimeEl.textContent = formatDuration(stats.average);
+                    varianceEl.textContent = formatDuration(stats.variance);
+                    renderChart(stats.diffs);
+                } else {
+                    statsSection.classList.add('hidden');
+                    chartSection.classList.add('hidden');
+                }
+            }
+        }
+
+        function renderTable(takes) {
+            logTableBody.innerHTML = '';
+            takes.forEach((take, index) => {
+                if (!take.timestamp) return;
+                const date = take.timestamp.toDate();
+                const row = `<tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600/20"><td class="p-3 font-medium">${takes.length - index}</td><td class="p-3">${date.toLocaleDateString('es-ES')}</td><td class="p-3">${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</td><td class="p-3 text-right"><button data-id="${take.id}" class="delete-btn text-red-500 hover:text-red-700 font-semibold text-sm">Eliminar</button></td></tr>`;
+                logTableBody.innerHTML += row;
+            });
+            document.querySelectorAll('.delete-btn').forEach(button => button.addEventListener('click', () => showDeleteModal(button.dataset.id)));
+        }
+
+        function calculateStats(takes) {
+            const diffs = [];
+            for (let i = 1; i < takes.length; i++) diffs.push(takes[i - 1].timestamp.toMillis() - takes[i].timestamp.toMillis());
+            if (diffs.length === 0) return { average: 0, variance: 0, diffs: [] };
+            const sum = diffs.reduce((a, b) => a + b, 0);
+            const average = sum / diffs.length;
+            const variance = diffs.reduce((acc, val) => acc + Math.pow(val - average, 2), 0) / diffs.length;
+            return { average, variance, diffs };
+        }
+        
+        function formatDuration(ms) {
+            if (isNaN(ms) || ms < 0) return "-";
+            const h = Math.floor(ms / 3600000);
+            const m = Math.floor((ms % 3600000) / 60000);
+            return `${h}h ${m}m`;
+        }
+
+        function renderChart(diffs) {
+            const ctx = el('takesChart').getContext('2d');
+            const labels = diffs.map((_, i) => `Toma ${i + 2}`);
+            const dataInHours = diffs.map(d => d / 3600000);
+            if (takesChart) takesChart.destroy();
+            takesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.reverse(),
+                    datasets: [{ label: 'Horas desde la toma anterior', data: dataInHours.reverse(), borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.2)', tension: 0.1, fill: true }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true, title: { display: true, text: 'Horas' } } } }
+            });
+        }
+
+        function showModal() {
+            const now = new Date();
+            takeTimeInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modal.querySelector('.modal-content').classList.remove('scale-95'); }, 10);
+        }
+        function hideModal() {
+            modal.classList.add('opacity-0');
+            modal.querySelector('.modal-content').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+        function showDeleteModal(id) {
+            takeIdToDelete = id;
+            deleteModal.classList.remove('hidden');
+            setTimeout(() => { deleteModal.classList.remove('opacity-0'); deleteModal.querySelector('.modal-content').classList.remove('scale-95'); }, 10);
+        }
+        function hideDeleteModal() {
+            deleteModal.classList.add('opacity-0');
+            deleteModal.querySelector('.modal-content').classList.add('scale-95');
+            setTimeout(() => { deleteModal.classList.add('hidden'); takeIdToDelete = null; }, 300);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                initializeApp(firebaseConfig);
+                db = getFirestore();
+                
+                setupUserId();
+                loadDataForCurrentUser();
+
+                copyIdBtn.addEventListener('click', copyUserId);
+                understandBtn.addEventListener('click', () => setupNotice.classList.add('hidden'));
+                takePillBtn.addEventListener('click', showModal);
+                cancelBtn.addEventListener('click', hideModal);
+                confirmBtn.addEventListener('click', logPillTake);
+                confirmDeleteBtn.addEventListener('click', executeDelete);
+                cancelDeleteBtn.addEventListener('click', hideDeleteModal);
+
+            } catch (error) {
+                console.error("Error al inicializar Firebase:", error);
+                appContainer.innerHTML = '<p class="text-red-500 text-center p-8">Error crítico al iniciar la aplicación.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
