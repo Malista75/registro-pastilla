@@ -58,7 +58,7 @@
             <!-- Estadísticas, Gráfico y Tabla (sin cambios) -->
             <div id="statsSection" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 text-center hidden">
                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"><h3 class="text-lg font-semibold text-gray-500 dark:text-gray-400">Tiempo Medio</h3><p id="avgTime" class="text-2xl font-bold text-green-600 dark:text-green-400">-</p></div>
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"><h3 class="text-lg font-semibold text-gray-500 dark:text-gray-400">Varianza</h3><p id="variance" class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">-</p></div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"><h3 class="text-lg font-semibold text-gray-500 dark:text-gray-400">Desv. Estándar</h3><p id="variance" class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">-</p></div>
             </div>
             <div id="chartSection" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8 hidden"><h2 class="text-xl font-bold text-center mb-4">Horas entre Tomas</h2><canvas id="takesChart"></canvas></div>
             <div id="logSection" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
@@ -212,8 +212,9 @@
                     statsSection.classList.remove('hidden');
                     chartSection.classList.remove('hidden');
                     const stats = calculateStats(takes);
+                    const stdDev = Math.sqrt(stats.variance); // Calcular Desviación Estándar
                     avgTimeEl.textContent = formatDuration(stats.average);
-                    varianceEl.textContent = formatDuration(stats.variance);
+                    stdDevEl.textContent = "± " + formatDuration(stdDev); // Mostrar Desviación Estándar
                     renderChart(stats.diffs);
                 } else {
                     statsSection.classList.add('hidden');
