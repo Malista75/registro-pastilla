@@ -200,26 +200,27 @@
         }
 
         function updateUI(takes) {
+            renderTable(takes); // Render the table first regardless of count
+
             if (takes.length === 0) {
                 noDataMessage.style.display = 'block';
                 statsSection.classList.add('hidden');
                 chartSection.classList.add('hidden');
-                logTableBody.innerHTML = '';
             } else {
-                noDataMessage.style.display = 'none';
-                renderTable(takes);
-                if (takes.length > 1) {
-                    statsSection.classList.remove('hidden');
-                    chartSection.classList.remove('hidden');
-                    const stats = calculateStats(takes);
-                    const stdDev = Math.sqrt(stats.variance); // Calcular Desviación Estándar
-                    avgTimeEl.textContent = formatDuration(stats.average);
-                    stdDevEl.textContent = "± " + formatDuration(stdDev); // Mostrar Desviación Estándar
-                    renderChart(stats.diffs);
-                } else {
-                    statsSection.classList.add('hidden');
-                    chartSection.classList.add('hidden');
-                }
+                 noDataMessage.style.display = 'none';
+            }
+
+            if (takes.length > 1) {
+                statsSection.classList.remove('hidden');
+                chartSection.classList.remove('hidden');
+                const stats = calculateStats(takes);
+                const stdDev = Math.sqrt(stats.variance);
+                avgTimeEl.textContent = formatDuration(stats.average);
+                stdDevEl.textContent = "± " + formatDuration(stdDev);
+                renderChart(stats.diffs);
+            } else {
+                statsSection.classList.add('hidden');
+                chartSection.classList.add('hidden');
             }
         }
 
