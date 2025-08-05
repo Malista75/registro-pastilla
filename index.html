@@ -71,9 +71,30 @@
                 <h2 class="text-2xl font-bold text-center mb-2">Estimador de Concentración</h2>
                 <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-4" role="alert">
                     <p class="font-bold">AVISO IMPORTANTE</p>
-                    <p class="text-sm">Esta es una simulación matemática con fines educativos. **NO es un consejo médico.** La concentración real en su cuerpo puede variar. Consulte **SIEMPRE** a su médico antes de tomar cualquier decisión sobre su medicación.</p>
+                    <p class="text-sm">Esta es una simulación matemática con fines educativos. **NO es un consejo médico.** La concentración real en su cuerpo puede variar. Consulte **SIEMPRE** a su médico.</p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div>
+                        <label for="age" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Edad</label>
+                        <input type="number" id="age" placeholder="Años" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label for="weight" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Peso (kg)</label>
+                        <input type="number" id="weight" placeholder="kg" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label for="sex" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sexo</label>
+                        <select id="sex" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
+                            <option value="male">Hombre</option>
+                            <option value="female">Mujer</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="serumCreatinine" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Creatinina Sérica</label>
+                        <input type="number" id="serumCreatinine" step="0.1" placeholder="mg/dL" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
+                    </div>
+                </div>
+                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="dose" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Dosis (mg)</label>
                         <select id="dose" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
@@ -81,10 +102,9 @@
                             <option value="110">110 mg</option>
                         </select>
                     </div>
-                    <div>
-                        <label for="crcl" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Función Renal (Aclaramiento de Creatinina)</label>
-                        <input type="number" id="crcl" placeholder="Ej: 90" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
-                        <p class="text-xs text-gray-500 mt-1">Dato clave. <a href="https://reference.medscape.com/calculator/218/creatinine-clearance-cockcroft-gault" target="_blank" class="text-blue-500 hover:underline">Estímalo aquí</a> o consulta a tu médico.</p>
+                    <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-md text-center">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Función Renal Estimada (CrCl)</label>
+                        <p id="crclDisplay" class="text-lg font-bold mt-1">- ml/min</p>
                     </div>
                 </div>
             </div>
@@ -138,7 +158,7 @@
         const confirmDeleteBtn = el('confirmDeleteBtn'), cancelDeleteBtn = el('cancelDeleteBtn');
         
         const estimateBtn = el('estimateBtn'), estimateModal = el('estimateModal'), closeEstimateBtn = el('closeEstimateBtn');
-        const doseInput = el('dose'), crclInput = el('crcl');
+        const doseInput = el('dose'), ageInput = el('age'), weightInput = el('weight'), sexInput = el('sex'), serumCreatinineInput = el('serumCreatinine'), crclDisplay = el('crclDisplay');
 
         function setupUserId() {
             let currentId = localStorage.getItem('pradaxaTrackerUserId');
@@ -153,14 +173,11 @@
         function loadDataForCurrentUser() {
             if (unsubscribe) unsubscribe();
             if (!db || !userId) return;
-
             loadingMessage.style.display = 'block';
             logTableBody.innerHTML = '';
             noDataMessage.style.display = 'none';
-
             const takesCollectionRef = collection(db, `takes/${userId}/log`);
             const q = query(takesCollectionRef, orderBy('timestamp', 'desc'));
-
             unsubscribe = onSnapshot(q, (snapshot) => {
                 loadingMessage.style.display = 'none';
                 allTakes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -209,7 +226,6 @@
             } else {
                 noDataMessage.style.display = 'none';
             }
-
             if (takes.length > 1) {
                 statsSection.classList.remove('hidden');
                 chartSection.classList.remove('hidden');
@@ -267,6 +283,15 @@
             });
         }
         
+        function cockcroftGault(age, weight, creatinine, sex) {
+            if (!age || !weight || !creatinine) return null;
+            let crcl = ((140 - age) * weight) / (72 * creatinine);
+            if (sex === 'female') {
+                crcl *= 0.85;
+            }
+            return crcl;
+        }
+
         function getHalfLife(crcl) {
             if (crcl > 80) return 13;
             if (crcl >= 50) return 15;
@@ -275,23 +300,28 @@
         }
 
         function calculateConcentration() {
-            const crcl = parseFloat(crclInput.value);
+            const age = parseFloat(ageInput.value);
+            const weight = parseFloat(weightInput.value);
+            const sex = sexInput.value;
+            const creatinine = parseFloat(serumCreatinineInput.value);
+            
+            const crcl = cockcroftGault(age, weight, creatinine, sex);
+
             if (!crcl || crcl <= 0) {
+                crclDisplay.textContent = '- ml/min';
                 if (estimateChart) estimateChart.destroy();
                 return;
             }
-            localStorage.setItem('pradaxaUserProfile', JSON.stringify({dose: doseInput.value, crcl: crclInput.value}));
+            
+            crclDisplay.textContent = `${crcl.toFixed(1)} ml/min`;
+            localStorage.setItem('pradaxaUserProfile', JSON.stringify({dose: doseInput.value, age, weight, sex, creatinine}));
 
             const halfLifeHours = getHalfLife(crcl);
             const now = new Date();
             const last48h = new Date(now.getTime() - 48 * 3600 * 1000);
             const next24h = new Date(now.getTime() + 24 * 3600 * 1000);
 
-            const relevantTakes = allTakes
-                .map(t => t.timestamp.toDate())
-                .filter(t => t > last48h)
-                .sort((a, b) => a - b);
-
+            const relevantTakes = allTakes.map(t => t.timestamp.toDate()).filter(t => t > last48h).sort((a, b) => a - b);
             const dataPoints = [];
             for (let time = last48h.getTime(); time <= next24h.getTime(); time += 15 * 60 * 1000) {
                 let totalConcentration = 0;
@@ -310,7 +340,6 @@
         function renderEstimateChart(data, now) {
             const ctx = el('estimateChart').getContext('2d');
             if (estimateChart) estimateChart.destroy();
-
             estimateChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -328,32 +357,13 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: {
-                            type: 'time',
-                            time: { unit: 'hour', displayFormats: { hour: 'HH:mm' } },
-                            title: { display: true, text: 'Hora' }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: { display: true, text: 'Concentración Relativa (%)' },
-                            max: 150
-                        }
+                        x: { type: 'time', time: { unit: 'hour', displayFormats: { hour: 'HH:mm' } }, title: { display: true, text: 'Hora' } },
+                        y: { beginAtZero: true, title: { display: true, text: 'Concentración Relativa (%)' }, max: 150 }
                     },
                     plugins: {
                         annotation: {
                             annotations: {
-                                line1: {
-                                    type: 'line',
-                                    xMin: now,
-                                    xMax: now,
-                                    borderColor: 'rgb(255, 99, 132)',
-                                    borderWidth: 2,
-                                    label: {
-                                        content: 'Ahora',
-                                        enabled: true,
-                                        position: 'start'
-                                    }
-                                }
+                                line1: { type: 'line', xMin: now, xMax: now, borderColor: 'rgb(255, 99, 132)', borderWidth: 2, label: { content: 'Ahora', enabled: true, position: 'start' } }
                             }
                         }
                     }
@@ -364,7 +374,10 @@
         function loadProfile() {
             const profile = JSON.parse(localStorage.getItem('pradaxaUserProfile') || '{}');
             if (profile.dose) doseInput.value = profile.dose;
-            if (profile.crcl) crclInput.value = profile.crcl;
+            if (profile.age) ageInput.value = profile.age;
+            if (profile.weight) weightInput.value = profile.weight;
+            if (profile.sex) sexInput.value = profile.sex;
+            if (profile.creatinine) serumCreatinineInput.value = profile.creatinine;
         }
 
         function showEstimateModal() {
@@ -373,7 +386,7 @@
             setTimeout(() => {
                 estimateModal.classList.remove('opacity-0');
                 estimateModal.querySelector('.modal-content').classList.remove('scale-95');
-                if (allTakes.length > 0 && crclInput.value) {
+                if (allTakes.length > 0 && ageInput.value && weightInput.value && serumCreatinineInput.value) {
                     calculateConcentration();
                 }
             }, 10);
@@ -423,8 +436,9 @@
                 
                 estimateBtn.addEventListener('click', showEstimateModal);
                 closeEstimateBtn.addEventListener('click', hideEstimateModal);
-                doseInput.addEventListener('change', calculateConcentration);
-                crclInput.addEventListener('input', calculateConcentration);
+                [doseInput, ageInput, weightInput, sexInput, serumCreatinineInput].forEach(input => {
+                    input.addEventListener('input', calculateConcentration);
+                });
 
             } catch (error) {
                 console.error("Error al inicializar Firebase:", error);
