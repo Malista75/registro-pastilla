@@ -28,7 +28,7 @@
 
         <div class="bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-yellow-500 text-yellow-700 dark:text-yellow-300 p-4 rounded-md mb-8" role="alert">
             <p class="font-bold">Tu ID de Usuario</p>
-            <p class="text-sm">Este ID se guarda en tu navegador. Si cambias de dispositivo o borras los datos, se generará uno nuevo.</p>
+            <p class="text-sm">Este ID se guarda en tu navegador. Si los datos desaparecen, usa la sección de recuperación de abajo.</p>
             <div class="mt-2 flex items-center gap-2 bg-yellow-200/50 dark:bg-gray-800 p-2 rounded-md">
                 <code id="userIdDisplay" class="flex-grow text-sm font-mono break-all">Cargando...</code>
                 <button id="copyIdBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded-md text-sm">Copiar ID</button>
@@ -60,6 +60,15 @@
                     </table>
                      <p id="noDataMessage" class="text-center py-8 text-gray-500 hidden">Aún no hay registros.</p>
                 </div>
+            </div>
+             <!-- Sección para recuperar datos -->
+            <div class="mt-8 border-t dark:border-gray-700 pt-6">
+                 <h3 class="text-lg font-semibold text-center mb-2">¿Datos incorrectos o en blanco?</h3>
+                 <p class="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">Pega aquí tu ID de usuario guardado para recuperar tu historial.</p>
+                 <div class="flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
+                     <input type="text" id="recoverIdInput" placeholder="Pega tu ID de usuario aquí" class="flex-grow w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                     <button id="loadIdBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">Cargar Datos</button>
+                 </div>
             </div>
         </main>
     </div>
@@ -156,6 +165,7 @@
         const modal = el('confirmationModal'), confirmBtn = el('confirmBtn'), cancelBtn = el('cancelBtn');
         const takeTimeInput = el('takeTimeInput'), deleteModal = el('deleteConfirmationModal');
         const confirmDeleteBtn = el('confirmDeleteBtn'), cancelDeleteBtn = el('cancelDeleteBtn');
+        const recoverIdInput = el('recoverIdInput'), loadIdBtn = el('loadIdBtn');
         
         const estimateBtn = el('estimateBtn'), estimateModal = el('estimateModal'), closeEstimateBtn = el('closeEstimateBtn');
         const doseInput = el('dose'), ageInput = el('age'), weightInput = el('weight'), sexInput = el('sex'), serumCreatinineInput = el('serumCreatinine'), crclDisplay = el('crclDisplay');
@@ -168,6 +178,17 @@
             }
             userId = currentId;
             userIdDisplay.textContent = userId;
+        }
+
+        function handleLoadId() {
+            const newId = recoverIdInput.value.trim();
+            if (newId) {
+                userId = newId;
+                localStorage.setItem('pradaxaTrackerUserId', userId);
+                userIdDisplay.textContent = userId;
+                recoverIdInput.value = '';
+                loadDataForCurrentUser();
+            }
         }
 
         function loadDataForCurrentUser() {
@@ -428,6 +449,7 @@
                 loadDataForCurrentUser();
 
                 copyIdBtn.addEventListener('click', copyUserId);
+                loadIdBtn.addEventListener('click', handleLoadId);
                 takePillBtn.addEventListener('click', showModal);
                 cancelBtn.addEventListener('click', hideModal);
                 confirmBtn.addEventListener('click', logPillTake);
