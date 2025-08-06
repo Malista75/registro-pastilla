@@ -36,12 +36,20 @@
         </div>
 
         <main>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                 <button id="takePillBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300 ease-in-out">
                     ¡He tomado la pastilla!
                 </button>
                 <button id="estimateBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300 ease-in-out">
                     Estimar Concentración
+                </button>
+            </div>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <button id="ibuprofenBtn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg">
+                    Registrar Ibuprofeno
+                </button>
+                <button id="alcoholBtn" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg">
+                    Registrar Alcohol
                 </button>
             </div>
 
@@ -51,11 +59,11 @@
             </div>
             <div id="chartSection" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8 hidden"><h2 class="text-xl font-bold text-center mb-4">Horas entre Tomas</h2><canvas id="takesChart"></canvas></div>
             <div id="logSection" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-                <h2 class="text-xl font-bold mb-4">Historial de Tomas</h2>
+                <h2 class="text-xl font-bold mb-4">Historial de Eventos</h2>
                 <div id="loadingMessage" class="text-center text-gray-500 py-4">Cargando datos...</div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
-                        <thead class="bg-gray-50 dark:bg-gray-700"><tr><th class="p-3 font-semibold">#</th><th class="p-3 font-semibold">Fecha</th><th class="p-3 font-semibold">Hora</th><th class="p-3 font-semibold text-right">Acción</th></tr></thead>
+                        <thead class="bg-gray-50 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Tipo</th><th class="p-3 font-semibold">Fecha</th><th class="p-3 font-semibold">Hora</th><th class="p-3 font-semibold">Detalle</th><th class="p-3 font-semibold text-right">Acción</th></tr></thead>
                         <tbody id="logTableBody"></tbody>
                     </table>
                      <p id="noDataMessage" class="text-center py-8 text-gray-500 hidden">Aún no hay registros.</p>
@@ -77,57 +85,35 @@
     <div id="estimateModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 modal-backdrop hidden opacity-0 z-40">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-2xl modal-content transform scale-95 max-h-[90vh] overflow-y-auto">
             <div>
-                <h2 class="text-2xl font-bold text-center mb-2">Estimador de Concentración</h2>
+                <h2 class="text-2xl font-bold text-center mb-4">Estimador de Concentración</h2>
+                <div id="riskIndicator" class="hidden p-3 rounded-md mb-4 text-center">
+                    <span id="riskLabel" class="text-lg font-bold"></span>
+                </div>
                 <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-4" role="alert">
                     <p class="font-bold">AVISO IMPORTANTE</p>
-                    <p class="text-sm">Esta es una simulación matemática con fines educativos. **NO es un consejo médico.** La concentración real en su cuerpo puede variar. Consulte **SIEMPRE** a su médico.</p>
+                    <p class="text-sm">Esta es una simulación matemática con fines educativos. **NO es un consejo médico.** Consulte **SIEMPRE** a su médico.</p>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <div>
-                        <label for="age" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Edad</label>
-                        <input type="number" id="age" placeholder="Años" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
-                    </div>
-                    <div>
-                        <label for="weight" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Peso (kg)</label>
-                        <input type="number" id="weight" placeholder="kg" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
-                    </div>
-                    <div>
-                        <label for="sex" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sexo</label>
-                        <select id="sex" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
-                            <option value="male">Hombre</option>
-                            <option value="female">Mujer</option>
-                        </select>
-                    </div>
-                     <div>
-                        <label for="serumCreatinine" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Creatinina Sérica (mg/dL)</label>
-                        <input type="number" id="serumCreatinine" step="0.1" placeholder="Ej: 0.8" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
-                    </div>
+                    <div><label for="age" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Edad</label><input type="number" id="age" placeholder="Años" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"></div>
+                    <div><label for="weight" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Peso (kg)</label><input type="number" id="weight" placeholder="kg" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"></div>
+                    <div><label for="sex" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sexo</label><select id="sex" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"><option value="male">Hombre</option><option value="female">Mujer</option></select></div>
+                    <div><label for="serumCreatinine" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Creatinina Sérica (mg/dL)</label><input type="number" id="serumCreatinine" step="0.1" placeholder="Ej: 0.8" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"></div>
                 </div>
-                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="dose" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Dosis (mg)</label>
-                        <select id="dose" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
-                            <option value="150">150 mg</option>
-                            <option value="110">110 mg</option>
-                        </select>
-                    </div>
-                    <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-md text-center">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Función Renal Estimada (CrCl)</label>
-                        <p id="crclDisplay" class="text-lg font-bold mt-1">- ml/min</p>
-                    </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div><label for="dose" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Dosis (mg)</label><select id="dose" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"><option value="150">150 mg</option><option value="110">110 mg</option></select></div>
+                    <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-md text-center"><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Función Renal Estimada (CrCl)</label><p id="crclDisplay" class="text-lg font-bold mt-1">- ml/min</p></div>
                 </div>
             </div>
             <div class="h-64 md:h-80"><canvas id="estimateChart"></canvas></div>
-            <div class="mt-6 flex justify-end gap-4">
-                <button id="closeEstimateBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-lg">Cerrar</button>
-            </div>
+            <div class="mt-6 flex justify-end gap-4"><button id="closeEstimateBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-lg">Cerrar</button></div>
         </div>
     </div>
     
     <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 modal-backdrop hidden opacity-0 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm text-center modal-content transform scale-95">
-            <h3 class="text-xl font-bold mb-4">Confirmar Toma</h3><p class="text-gray-600 dark:text-gray-400 mb-4">Ajusta la hora si es necesario.</p>
-            <div class="mb-6"><input type="datetime-local" id="takeTimeInput" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"></div>
+            <h3 id="genericModalTitle" class="text-xl font-bold mb-4"></h3>
+            <div class="mb-6"><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-left">Fecha y Hora</label><input type="datetime-local" id="genericTimeInput" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"></div>
+            <div id="quantitySelector" class="mb-6"></div>
             <div class="flex justify-center gap-4"><button id="cancelBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-lg">Cancelar</button><button id="confirmBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">Confirmar</button></div>
         </div>
     </div>
@@ -143,7 +129,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // TU CONFIGURACIÓN DE FIREBASE PERSONAL
         const firebaseConfig = {
             apiKey: "AIzaSyDNI_xL3YmNk6JQiHdymJeQk3FUX8H6tCk",
             authDomain: "miregistropradaxa.firebaseapp.com",
@@ -154,8 +139,8 @@
             measurementId: "G-KQET919J0D"
         };
 
-        let db, userId, takesChart, estimateChart = null, unsubscribe = null, takeIdToDelete = null;
-        let allTakes = [];
+        let db, userId, takesChart, estimateChart = null, unsubscribe = {}, takeToDelete = null;
+        let allEvents = [];
 
         const el = (id) => document.getElementById(id);
         const appContainer = el('app-container'), userIdDisplay = el('userIdDisplay'), copyIdBtn = el('copyIdBtn');
@@ -163,12 +148,17 @@
         const stdDevEl = el('stdDev'), chartSection = el('chartSection'), statsSection = el('statsSection');
         const loadingMessage = el('loadingMessage'), noDataMessage = el('noDataMessage');
         const modal = el('confirmationModal'), confirmBtn = el('confirmBtn'), cancelBtn = el('cancelBtn');
-        const takeTimeInput = el('takeTimeInput'), deleteModal = el('deleteConfirmationModal');
+        const genericTimeInput = el('genericTimeInput'), deleteModal = el('deleteConfirmationModal');
         const confirmDeleteBtn = el('confirmDeleteBtn'), cancelDeleteBtn = el('cancelDeleteBtn');
         const recoverIdInput = el('recoverIdInput'), loadIdBtn = el('loadIdBtn');
         
         const estimateBtn = el('estimateBtn'), estimateModal = el('estimateModal'), closeEstimateBtn = el('closeEstimateBtn');
         const doseInput = el('dose'), ageInput = el('age'), weightInput = el('weight'), sexInput = el('sex'), serumCreatinineInput = el('serumCreatinine'), crclDisplay = el('crclDisplay');
+        const ibuprofenBtn = el('ibuprofenBtn'), alcoholBtn = el('alcoholBtn');
+        const genericModalTitle = el('genericModalTitle'), quantitySelector = el('quantitySelector');
+        const riskIndicator = el('riskIndicator'), riskLabel = el('riskLabel');
+
+        let currentModalAction = null;
 
         function setupUserId() {
             let currentId = localStorage.getItem('pradaxaTrackerUserId');
@@ -192,20 +182,30 @@
         }
 
         function loadDataForCurrentUser() {
-            if (unsubscribe) unsubscribe();
+            Object.values(unsubscribe).forEach(unsub => unsub());
+            unsubscribe = {};
             if (!db || !userId) return;
+
             loadingMessage.style.display = 'block';
             logTableBody.innerHTML = '';
             noDataMessage.style.display = 'none';
-            const takesCollectionRef = collection(db, `takes/${userId}/log`);
-            const q = query(takesCollectionRef, orderBy('timestamp', 'desc'));
-            unsubscribe = onSnapshot(q, (snapshot) => {
-                loadingMessage.style.display = 'none';
-                allTakes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                updateUI(allTakes);
-            }, (error) => {
-                console.error("Error al obtener los datos:", error);
-                loadingMessage.textContent = "Error al cargar los datos.";
+
+            const collections = { pradaxa: 'log', ibuprofen: 'ibuprofen', alcohol: 'alcohol' };
+            
+            Object.entries(collections).forEach(([type, path]) => {
+                const collectionRef = collection(db, `takes/${userId}/${path}`);
+                const q = query(collectionRef, orderBy('timestamp', 'desc'));
+
+                unsubscribe[type] = onSnapshot(q, (snapshot) => {
+                    const newEvents = snapshot.docs.map(d => ({ id: d.id, type, path, ...d.data() }));
+                    allEvents = allEvents.filter(e => e.type !== type).concat(newEvents);
+                    allEvents.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
+                    loadingMessage.style.display = 'none';
+                    updateUI(allEvents);
+                }, (error) => {
+                    console.error(`Error al obtener datos de ${type}:`, error);
+                    loadingMessage.textContent = "Error al cargar los datos.";
+                });
             });
         }
 
@@ -217,40 +217,29 @@
                 setTimeout(() => msg.classList.add('opacity-0'), 2000);
             });
         }
-
-        async function logPillTake() {
-            if (!takeTimeInput.value) return;
-            confirmBtn.disabled = true;
-            try {
-                await addDoc(collection(db, `takes/${userId}/log`), { timestamp: new Date(takeTimeInput.value) });
-            } finally {
-                confirmBtn.disabled = false;
-                hideModal();
-            }
-        }
         
         async function executeDelete() {
-            if (!takeIdToDelete) return;
+            if (!takeToDelete) return;
             try {
-                await deleteDoc(doc(db, `takes/${userId}/log`, takeIdToDelete));
+                await deleteDoc(doc(db, `takes/${userId}/${takeToDelete.path}`, takeToDelete.id));
             } finally {
                 hideDeleteModal();
             }
         }
 
-        function updateUI(takes) {
-            renderTable(takes);
-            if (takes.length === 0) {
+        function updateUI(events) {
+            renderTable(events);
+            const pradaxaTakes = events.filter(e => e.type === 'pradaxa');
+
+            if (events.length === 0) {
                 noDataMessage.style.display = 'block';
-                statsSection.classList.add('hidden');
-                chartSection.classList.add('hidden');
             } else {
                 noDataMessage.style.display = 'none';
             }
-            if (takes.length > 1) {
+            if (pradaxaTakes.length > 1) {
                 statsSection.classList.remove('hidden');
                 chartSection.classList.remove('hidden');
-                const stats = calculateStats(takes);
+                const stats = calculateStats(pradaxaTakes);
                 const stdDev = Math.sqrt(stats.variance);
                 avgTimeEl.textContent = formatDuration(stats.average);
                 stdDevEl.textContent = "± " + formatDuration(stdDev);
@@ -261,15 +250,34 @@
             }
         }
 
-        function renderTable(takes) {
+        function renderTable(events) {
             logTableBody.innerHTML = '';
-            takes.forEach((take, index) => {
-                if (!take.timestamp) return;
-                const date = take.timestamp.toDate();
-                const row = `<tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600/20"><td class="p-3 font-medium">${takes.length - index}</td><td class="p-3">${date.toLocaleDateString('es-ES')}</td><td class="p-3">${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</td><td class="p-3 text-right"><button data-id="${take.id}" class="delete-btn text-red-500 hover:text-red-700 font-semibold text-sm">Eliminar</button></td></tr>`;
+            events.forEach((event, index) => {
+                if (!event.timestamp) return;
+                const date = event.timestamp.toDate();
+                let icon = '';
+                let detail = '';
+                if (event.type === 'pradaxa') {
+                    icon = '💊';
+                    detail = 'Pradaxa';
+                } else if (event.type === 'ibuprofen') {
+                    icon = '🩹';
+                    detail = `Ibuprofeno ${event.quantity}mg`;
+                } else if (event.type === 'alcohol') {
+                    icon = '🍺';
+                    detail = `Alcohol (${event.quantity})`;
+                }
+
+                const row = `<tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600/20">
+                    <td class="p-3 font-medium text-xl">${icon}</td>
+                    <td class="p-3">${date.toLocaleDateString('es-ES')}</td>
+                    <td class="p-3">${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</td>
+                    <td class="p-3">${detail}</td>
+                    <td class="p-3 text-right"><button data-index="${index}" class="delete-btn text-red-500 hover:text-red-700 font-semibold text-sm">Eliminar</button></td>
+                </tr>`;
                 logTableBody.innerHTML += row;
             });
-            document.querySelectorAll('.delete-btn').forEach(button => button.addEventListener('click', () => showDeleteModal(button.dataset.id)));
+            document.querySelectorAll('.delete-btn').forEach(button => button.addEventListener('click', () => showDeleteModal(allEvents[button.dataset.index])));
         }
 
         function calculateStats(takes) {
@@ -307,9 +315,7 @@
         function cockcroftGault(age, weight, creatinine, sex) {
             if (!age || !weight || !creatinine) return null;
             let crcl = ((140 - age) * weight) / (72 * creatinine);
-            if (sex === 'female') {
-                crcl *= 0.85;
-            }
+            if (sex === 'female') crcl *= 0.85;
             return crcl;
         }
 
@@ -321,11 +327,7 @@
         }
 
         function calculateConcentration() {
-            const age = parseFloat(ageInput.value);
-            const weight = parseFloat(weightInput.value);
-            const sex = sexInput.value;
-            const creatinine = parseFloat(serumCreatinineInput.value);
-            
+            const age = parseFloat(ageInput.value), weight = parseFloat(weightInput.value), sex = sexInput.value, creatinine = parseFloat(serumCreatinineInput.value);
             const crcl = cockcroftGault(age, weight, creatinine, sex);
 
             if (!crcl || crcl <= 0) {
@@ -342,11 +344,11 @@
             const last48h = new Date(now.getTime() - 48 * 3600 * 1000);
             const next24h = new Date(now.getTime() + 24 * 3600 * 1000);
 
-            const relevantTakes = allTakes.map(t => t.timestamp.toDate()).filter(t => t > last48h).sort((a, b) => a - b);
+            const pradaxaTakes = allEvents.filter(e => e.type === 'pradaxa').map(t => t.timestamp.toDate()).filter(t => t > last48h).sort((a, b) => a - b);
             const dataPoints = [];
             for (let time = last48h.getTime(); time <= next24h.getTime(); time += 15 * 60 * 1000) {
                 let totalConcentration = 0;
-                relevantTakes.forEach(takeTime => {
+                pradaxaTakes.forEach(takeTime => {
                     if (time >= takeTime.getTime()) {
                         const hoursElapsed = (time - takeTime.getTime()) / 3600000;
                         const concentration = 100 * Math.pow(0.5, hoursElapsed / halfLifeHours);
@@ -355,20 +357,73 @@
                 });
                 dataPoints.push({ x: time, y: Math.min(totalConcentration, 150) });
             }
-            renderEstimateChart(dataPoints, now);
+            
+            // Lógica de riesgo con decaimiento
+            let finalRiskLevel = 0;
+            const nowMs = now.getTime();
+
+            const recentIbuprofen = allEvents.filter(e => e.type === 'ibuprofen');
+            if (recentIbuprofen.length > 0) {
+                const mostRecentIbu = recentIbuprofen[0]; // Ya están ordenados por fecha
+                const hoursElapsed = (nowMs - mostRecentIbu.timestamp.toMillis()) / 3600000;
+                if (hoursElapsed < 24) {
+                    const maxRisk = mostRecentIbu.quantity === '600' ? 3 : 2;
+                    const currentRisk = maxRisk * (1 - (hoursElapsed / 24));
+                    finalRiskLevel = Math.max(finalRiskLevel, currentRisk);
+                }
+            }
+
+            const recentAlcohol = allEvents.filter(e => e.type === 'alcohol');
+            if (recentAlcohol.length > 0) {
+                const mostRecentAlc = recentAlcohol[0];
+                const hoursElapsed = (nowMs - mostRecentAlc.timestamp.toMillis()) / 3600000;
+                if (hoursElapsed < 12) {
+                    let maxRisk = 1;
+                    if (mostRecentAlc.quantity === '2-3') maxRisk = 2;
+                    if (mostRecentAlc.quantity === '4+') maxRisk = 3;
+                    const currentRisk = maxRisk * (1 - (hoursElapsed / 12));
+                    finalRiskLevel = Math.max(finalRiskLevel, currentRisk);
+                }
+            }
+            
+            const roundedRiskLevel = Math.round(finalRiskLevel);
+            
+            let riskInfo = { label: "SIN RIESGO AÑADIDO", className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200' };
+            if (roundedRiskLevel === 1) {
+                riskInfo = { label: "RIESGO MEDIO", className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200' };
+            } else if (roundedRiskLevel === 2) {
+                riskInfo = { label: "RIESGO ALTO", className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200' };
+            } else if (roundedRiskLevel >= 3) {
+                riskInfo = { label: "RIESGO MUY ALTO", className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200' };
+            }
+            
+            riskIndicator.className = `p-3 rounded-md mb-4 text-center ${riskInfo.className}`;
+            riskLabel.textContent = riskInfo.label;
+            riskIndicator.classList.remove('hidden');
+
+            renderEstimateChart(dataPoints, now, roundedRiskLevel);
         }
 
-        function renderEstimateChart(data, now) {
+        function renderEstimateChart(data, now, riskLevel) {
             const ctx = el('estimateChart').getContext('2d');
             if (estimateChart) estimateChart.destroy();
+            
+            const colors = [
+                { border: 'rgb(16, 185, 129)', bg: 'rgba(16, 185, 129, 0.2)' }, // Normal
+                { border: 'rgb(245, 158, 11)', bg: 'rgba(245, 158, 11, 0.2)' }, // Moderate
+                { border: 'rgb(239, 68, 68)', bg: 'rgba(239, 68, 68, 0.2)' }, // High
+                { border: 'rgb(159, 18, 57)', bg: 'rgba(159, 18, 57, 0.3)' }  // Very High
+            ];
+            const selectedColor = colors[riskLevel] || colors[0];
+
             estimateChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     datasets: [{
                         label: 'Concentración Relativa Estimada (%)',
                         data: data,
-                        borderColor: 'rgb(16, 185, 129)',
-                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        borderColor: selectedColor.border,
+                        backgroundColor: selectedColor.bg,
                         fill: true,
                         pointRadius: 0,
                         borderWidth: 2,
@@ -407,8 +462,12 @@
             setTimeout(() => {
                 estimateModal.classList.remove('opacity-0');
                 estimateModal.querySelector('.modal-content').classList.remove('scale-95');
-                if (allTakes.length > 0 && ageInput.value && weightInput.value && serumCreatinineInput.value) {
+                if (allEvents.filter(e => e.type === 'pradaxa').length > 0 && ageInput.value && weightInput.value && serumCreatinineInput.value) {
                     calculateConcentration();
+                } else {
+                    riskIndicator.className = 'p-3 rounded-md mb-4 text-center bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+                    riskLabel.textContent = "DATOS INCOMPLETOS";
+                    riskIndicator.classList.remove('hidden');
                 }
             }, 10);
         }
@@ -418,26 +477,78 @@
             setTimeout(() => estimateModal.classList.add('hidden'), 300);
         }
 
-        function showModal() {
+        function showModal(type) {
+            currentModalAction = type;
+            let title = '';
+            let quantityHTML = '';
+
+            if (type === 'pradaxa') {
+                title = 'Confirmar Toma de Pradaxa';
+            } else if (type === 'ibuprofen') {
+                title = 'Registrar Toma de Ibuprofeno';
+                quantityHTML = `<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-left">Dosis</label>
+                                <select id="ibuprofenDose" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
+                                    <option value="400">400 mg</option>
+                                    <option value="600">600 mg</option>
+                                </select>`;
+            } else if (type === 'alcohol') {
+                title = 'Registrar Consumo de Alcohol';
+                quantityHTML = `<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-left">Cantidad</label>
+                                <select id="alcoholQuantity" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
+                                    <option value="1">1 Bebida</option>
+                                    <option value="2-3">2-3 Bebidas</option>
+                                    <option value="4+">4+ Bebidas</option>
+                                </select>`;
+            }
+            
+            genericModalTitle.textContent = title;
+            quantitySelector.innerHTML = quantityHTML;
+
             const now = new Date();
-            takeTimeInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            genericTimeInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); modal.querySelector('.modal-content').classList.remove('scale-95'); }, 10);
         }
+
+        async function handleConfirm() {
+            if (!genericTimeInput.value) return;
+            confirmBtn.disabled = true;
+            
+            const data = { timestamp: new Date(genericTimeInput.value) };
+            let collectionPath = '';
+
+            if (currentModalAction === 'pradaxa') {
+                collectionPath = 'log';
+            } else if (currentModalAction === 'ibuprofen') {
+                collectionPath = 'ibuprofen';
+                data.quantity = el('ibuprofenDose').value;
+            } else if (currentModalAction === 'alcohol') {
+                collectionPath = 'alcohol';
+                data.quantity = el('alcoholQuantity').value;
+            }
+
+            try {
+                await addDoc(collection(db, `takes/${userId}/${collectionPath}`), data);
+            } finally {
+                confirmBtn.disabled = false;
+                hideModal();
+            }
+        }
+
         function hideModal() {
             modal.classList.add('opacity-0');
             modal.querySelector('.modal-content').classList.add('scale-95');
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
-        function showDeleteModal(id) {
-            takeIdToDelete = id;
+        function showDeleteModal(eventData) {
+            takeToDelete = eventData;
             deleteModal.classList.remove('hidden');
             setTimeout(() => { deleteModal.classList.remove('opacity-0'); deleteModal.querySelector('.modal-content').classList.remove('scale-95'); }, 10);
         }
         function hideDeleteModal() {
             deleteModal.classList.add('opacity-0');
             deleteModal.querySelector('.modal-content').classList.add('scale-95');
-            setTimeout(() => { deleteModal.classList.add('hidden'); takeIdToDelete = null; }, 300);
+            setTimeout(() => { deleteModal.classList.add('hidden'); takeToDelete = null; }, 300);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -450,9 +561,12 @@
 
                 copyIdBtn.addEventListener('click', copyUserId);
                 loadIdBtn.addEventListener('click', handleLoadId);
-                takePillBtn.addEventListener('click', showModal);
+                takePillBtn.addEventListener('click', () => showModal('pradaxa'));
+                ibuprofenBtn.addEventListener('click', () => showModal('ibuprofen'));
+                alcoholBtn.addEventListener('click', () => showModal('alcohol'));
+
                 cancelBtn.addEventListener('click', hideModal);
-                confirmBtn.addEventListener('click', logPillTake);
+                confirmBtn.addEventListener('click', handleConfirm);
                 confirmDeleteBtn.addEventListener('click', executeDelete);
                 cancelDeleteBtn.addEventListener('click', hideDeleteModal);
                 
