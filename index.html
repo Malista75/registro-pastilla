@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -265,7 +265,7 @@
                     detail = `Ibuprofeno ${event.quantity}mg`;
                 } else if (event.type === 'alcohol') {
                     icon = '🍺';
-                    detail = `Alcohol (${event.quantity})`;
+                    detail = `Alcohol (${event.quantity_ml}ml, ${event.abv}%)`;
                 }
 
                 const row = `<tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600/20">
@@ -358,13 +358,12 @@
                 dataPoints.push({ x: time, y: Math.min(totalConcentration, 150) });
             }
             
-            // Lógica de riesgo con decaimiento
             let finalRiskLevel = 0;
             const nowMs = now.getTime();
 
             const recentIbuprofen = allEvents.filter(e => e.type === 'ibuprofen');
             if (recentIbuprofen.length > 0) {
-                const mostRecentIbu = recentIbuprofen[0]; // Ya están ordenados por fecha
+                const mostRecentIbu = recentIbuprofen[0];
                 const hoursElapsed = (nowMs - mostRecentIbu.timestamp.toMillis()) / 3600000;
                 if (hoursElapsed < 24) {
                     const maxRisk = mostRecentIbu.quantity === '600' ? 3 : 2;
@@ -378,9 +377,11 @@
                 const mostRecentAlc = recentAlcohol[0];
                 const hoursElapsed = (nowMs - mostRecentAlc.timestamp.toMillis()) / 3600000;
                 if (hoursElapsed < 12) {
-                    let maxRisk = 1;
-                    if (mostRecentAlc.quantity === '2-3') maxRisk = 2;
-                    if (mostRecentAlc.quantity === '4+') maxRisk = 3;
+                    const grams = (mostRecentAlc.quantity_ml * (mostRecentAlc.abv / 100)) * 0.789;
+                    let maxRisk = 0;
+                    if (grams > 40) maxRisk = 3;
+                    else if (grams > 15) maxRisk = 2;
+                    else if (grams > 0) maxRisk = 1;
                     const currentRisk = maxRisk * (1 - (hoursElapsed / 12));
                     finalRiskLevel = Math.max(finalRiskLevel, currentRisk);
                 }
@@ -409,10 +410,10 @@
             if (estimateChart) estimateChart.destroy();
             
             const colors = [
-                { border: 'rgb(16, 185, 129)', bg: 'rgba(16, 185, 129, 0.2)' }, // Normal
-                { border: 'rgb(245, 158, 11)', bg: 'rgba(245, 158, 11, 0.2)' }, // Moderate
-                { border: 'rgb(239, 68, 68)', bg: 'rgba(239, 68, 68, 0.2)' }, // High
-                { border: 'rgb(159, 18, 57)', bg: 'rgba(159, 18, 57, 0.3)' }  // Very High
+                { border: 'rgb(16, 185, 129)', bg: 'rgba(16, 185, 129, 0.2)' },
+                { border: 'rgb(245, 158, 11)', bg: 'rgba(245, 158, 11, 0.2)' },
+                { border: 'rgb(239, 68, 68)', bg: 'rgba(239, 68, 68, 0.2)' },
+                { border: 'rgb(159, 18, 57)', bg: 'rgba(159, 18, 57, 0.3)' }
             ];
             const selectedColor = colors[riskLevel] || colors[0];
 
@@ -493,12 +494,16 @@
                                 </select>`;
             } else if (type === 'alcohol') {
                 title = 'Registrar Consumo de Alcohol';
-                quantityHTML = `<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-left">Cantidad</label>
-                                <select id="alcoholQuantity" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm">
-                                    <option value="1">1 Bebida</option>
-                                    <option value="2-3">2-3 Bebidas</option>
-                                    <option value="4+">4+ Bebidas</option>
-                                </select>`;
+                quantityHTML = `<div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-left">Cantidad (ml)</label>
+                                        <input type="number" id="alcoholMl" step="100" placeholder="Ej: 300" class="mt-1 w-full px-3 py-2 border rounded-md">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-left">Graduación (%)</label>
+                                        <input type="number" id="alcoholAbv" step="1" placeholder="Ej: 5" class="mt-1 w-full px-3 py-2 border rounded-md">
+                                    </div>
+                                </div>`;
             }
             
             genericModalTitle.textContent = title;
@@ -524,7 +529,13 @@
                 data.quantity = el('ibuprofenDose').value;
             } else if (currentModalAction === 'alcohol') {
                 collectionPath = 'alcohol';
-                data.quantity = el('alcoholQuantity').value;
+                data.quantity_ml = el('alcoholMl').value;
+                data.abv = el('alcoholAbv').value;
+                if (!data.quantity_ml || !data.abv) {
+                    alert('Por favor, introduce cantidad y graduación.');
+                    confirmBtn.disabled = false;
+                    return;
+                }
             }
 
             try {
